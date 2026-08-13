@@ -1,4 +1,6 @@
 using System.Net;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Dompet.Api.Tests;
@@ -14,5 +16,16 @@ public class SmokeTests
         var response = await client.GetAsync("/api/auth/register");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public void Factory_ResolvesSqliteDbContext()
+    {
+        using var factory = new TestWebAppFactory();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<Dompet.Api.Data.AppDbContext>();
+
+        Assert.True(db.Database.CanConnect());
+        Assert.True(db.Database.IsSqlite());
     }
 }
