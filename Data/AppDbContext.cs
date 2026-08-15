@@ -31,6 +31,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         {
             e.Property(t => t.Amount).HasColumnType("decimal(18,2)");
             e.HasIndex(t => new { t.UserId, t.Date });
+            e.HasIndex(t => new { t.UserId, t.CategoryId});
+            e.HasIndex(t => new { t.UserId, t.WalletId});
             e.HasIndex(t => t.WalletId);
             e.HasIndex(t => t.CategoryId);
             e.HasOne(t => t.Wallet)

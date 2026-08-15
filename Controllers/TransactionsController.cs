@@ -4,6 +4,7 @@ using Dompet.Api.Models;
 using Dompet.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Dompet.Api.Controllers;
 
@@ -19,14 +20,16 @@ public class TransactionsController : ControllerBase
         User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new UnauthorizedAccessException();
 
     [HttpGet]
-    public async Task<ActionResult<List<TransactionDto>>> Get(
-        [FromQuery] DateTimeOffset? dateFrom,
-        [FromQuery] DateTimeOffset? dateTo,
+    public async Task<ActionResult<PageResult<TransactionDto>>> Get(
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
         [FromQuery] int? categoryId,
         [FromQuery] int? walletId,
-        [FromQuery] TransactionType? type)
+        [FromQuery] TransactionType? type,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        return Ok(await _transactions.GetTransactionsAsync(UserId, dateFrom, dateTo, categoryId, walletId, type));
+        return Ok(await _transactions.GetTransactionsAsync(UserId, dateFrom, dateTo, categoryId, walletId, type, page, pageSize));
     }
 
     [HttpPost]

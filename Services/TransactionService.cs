@@ -1,6 +1,7 @@
 using Dompet.Api.Data;
 using Dompet.Api.DTOs;
 using Dompet.Api.Models;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dompet.Api.Services;
@@ -10,27 +11,33 @@ public class TransactionService : ITransactionService
     private readonly AppDbContext _db;
     public TransactionService(AppDbContext db) => _db = db;
 
-    public async Task<List<TransactionDto>> GetTransactionsAsync(
-        string userId, DateTimeOffset? dateFrom, DateTimeOffset? dateTo,
-        int? categoryId, int? walletId, TransactionType? type)
+    public async Task<PageResult<TransactionDto>> GetTransactionsAsync(
+        string userId, DateTime? dateFrom, DateTime? dateTo,
+        int? categoryId, int? walletId, TransactionType? type,
+        int page, int pageSize)
     {
         var query = _db.Transactions.AsNoTracking().Where(t => t.UserId == userId);
 
+        if (dateFrom.HasValue) query = query.Where(t => t.Date >= dateFrom.Value.ToUniversalTime());
+        if (dateTo.HasValue) query = query.Where(t => t.Date <= dateTo.Value.ToUniversalTime());
         if (categoryId.HasValue) query = query.Where(t => t.CategoryId == categoryId.Value);
         if (walletId.HasValue) query = query.Where(t => t.WalletId == walletId.Value);
         if (type.HasValue) query = query.Where(t => t.Type == type.Value);
 
-        var result = await query
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(t => t.Date)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(t => new TransactionDto(
-                t.Id, t.WalletId, t.Wallet.Name, t.CategoryId, t.Category.Name,
-                t.Amount, t.Type, t.Note, t.Date))
-            .ToListAsync();
+               t.Id, t.WalletId, t.Wallet.Name, t.CategoryId, t.Category.Name,
+               t.Amount, t.Type, t.Note, t.Date))
+           .ToListAsync();
 
-        var filtered = result.AsEnumerable();
-        if (dateFrom.HasValue) filtered = filtered.Where(t => t.Date >= dateFrom.Value);
-        if (dateTo.HasValue) filtered = filtered.Where(t => t.Date <= dateTo.Value);
-
-        return filtered.OrderByDescending(t => t.Date).ToList();
+        return new PageResult<TransactionDto>(
+            items, page, pageSize, totalCount, (int)Math.Ceiling(totalCount/ (double)pageSize)
+        );
     }
 
     public async Task<(TransactionDto?, string?)> CreateTransactionAsync(string userId, TransactionRequest request)
@@ -52,7 +59,7 @@ public class TransactionService : ITransactionService
             Amount = request.Amount,
             Type = request.Type,
             Note = request.Note,
-            Date = request.Date,
+            Date = request.Date.ToUniversalTime(),
         };
 
         _db.Transactions.Add(transaction);
@@ -80,7 +87,7 @@ public class TransactionService : ITransactionService
         transaction.Amount = request.Amount;
         transaction.Type = request.Type;
         transaction.Note = request.Note;
-        transaction.Date = request.Date;
+        transaction.Date = request.Date.ToUniversalTime();
 
         await _db.SaveChangesAsync();
 

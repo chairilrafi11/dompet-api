@@ -11,7 +11,7 @@ public class Transaction
     public decimal Amount { get; set; }
     public TransactionType Type { get; set; }
     public string? Note { get; set; }
-    public DateTimeOffset Date { get; set; }
+    public DateTime Date { get; set; }
     public Wallet Wallet { get; set; } = null!;
     public Category Category { get; set; } = null!;
 }

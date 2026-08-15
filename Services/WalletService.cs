@@ -15,6 +15,7 @@ public class WalletService : IWalletService
         var wallets = await _db.Wallets.AsNoTracking()
             .Where(w => w.UserId == userId)
             .OrderBy(w => w.Name)
+            .Select(w => new { w.Id, w.Name, w.InitialBalance })
             .ToListAsync();
 
         var transactions = await _db.Transactions.AsNoTracking()

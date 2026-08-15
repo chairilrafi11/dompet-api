@@ -185,6 +185,10 @@ DocProject/Help/html
 # Click-Once directory
 publish/
 
+# Deploy artifacts
+app.zip
+*.zip
+
 # Publish Web Output
 *.[Pp]ublish.xml
 *.azurePubxml

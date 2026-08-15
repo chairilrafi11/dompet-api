@@ -9,7 +9,7 @@ public record TransactionRequest(
     [Range(0.01, double.MaxValue)] decimal Amount,
     TransactionType Type,
     string? Note,
-    DateTimeOffset Date);
+    DateTime Date);
 
 public record TransactionDto(
     int Id,

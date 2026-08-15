@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Dompet.Api.DTOs;
 using Dompet.Api.Models;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Xunit;
 
 namespace Dompet.Api.Tests;
@@ -31,7 +32,7 @@ public class TransactionTests
         var (client, walletId, catId) = await SetupAsync();
 
         var create = await client.PostAsJsonAsync("/api/transactions",
-            new TransactionRequest(walletId, catId, 50000, TransactionType.Expense, "Nasi", DateTimeOffset.UtcNow));
+            new TransactionRequest(walletId, catId, 50000, TransactionType.Expense, "Nasi", DateTime.UtcNow));
 
         Assert.Equal(HttpStatusCode.Created, create.StatusCode);
 
@@ -46,7 +47,7 @@ public class TransactionTests
         var (client, walletId, catId) = await SetupAsync();
 
         var response = await client.PostAsJsonAsync("/api/transactions",
-            new TransactionRequest(walletId, catId, 10000, TransactionType.Income, null, DateTimeOffset.UtcNow));
+            new TransactionRequest(walletId, catId, 10000, TransactionType.Income, null, DateTime.UtcNow));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -56,12 +57,30 @@ public class TransactionTests
     {
         var (client, walletId, catId) = await SetupAsync();
         await client.PostAsJsonAsync("/api/transactions",
-            new TransactionRequest(walletId, catId, 50000, TransactionType.Expense, null, DateTimeOffset.UtcNow));
+            new TransactionRequest(walletId, catId, 50000, TransactionType.Expense, null, DateTime.UtcNow));
 
         var response = await client.GetAsync($"/api/transactions?categoryId={catId}");
-        var list = await response.Content.ReadFromJsonAsync<List<TransactionDto>>();
+        var list = (await response.Content.ReadFromJsonAsync<PageResult<TransactionDto>>())!.Items;
 
         Assert.Single(list!);
         Assert.Equal("Makan", list![0].CategoryName);
+    }
+
+    [Fact]
+    public async Task GetTransactions_FilterByDateRange()
+    {
+        var (client, walletId, catId) = await SetupAsync();
+
+        var recent = DateTime.UtcNow.AddDays(-1);
+        var old = DateTime.UtcNow.AddDays(-10);
+
+        await client.PostAsJsonAsync("/api/transactions", new TransactionRequest(walletId, catId, 50000, TransactionType.Expense, null, recent));
+        await client.PostAsJsonAsync("/api/transactions", new TransactionRequest(walletId, catId, 20000, TransactionType.Expense, null, old));
+
+        var respose = await client.GetAsync($"/api/transactions?dateFrom={Uri.EscapeDataString(DateTimeOffset.UtcNow.AddDays(-5).ToString("O"))}");
+        var list = (await respose.Content.ReadFromJsonAsync<PageResult<TransactionDto>>())!.Items;
+
+        Assert.Single(list!);
+        Assert.Equal(50000m, list![0].Amount);
     }
 }

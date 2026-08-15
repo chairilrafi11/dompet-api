@@ -26,9 +26,9 @@ public class AnalyticsTests
         var expId = (await exp.Content.ReadFromJsonAsync<CategoryDto>())!.Id;
 
         await client.PostAsJsonAsync("/api/transactions",
-            new TransactionRequest(walletId, incId, 100000, TransactionType.Income, null, DateTimeOffset.UtcNow));
+            new TransactionRequest(walletId, incId, 100000, TransactionType.Income, null, DateTime.UtcNow));
         await client.PostAsJsonAsync("/api/transactions",
-            new TransactionRequest(walletId, expId, 40000, TransactionType.Expense, null, DateTimeOffset.UtcNow));
+            new TransactionRequest(walletId, expId, 40000, TransactionType.Expense, null, DateTime.UtcNow));
 
         return client;
     }
