@@ -3,8 +3,6 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Dompet.Api.DTOs;
 using Dompet.Api.Models;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Xunit;
 
 namespace Dompet.Api.Tests;
 
@@ -83,4 +81,20 @@ public class TransactionTests
         Assert.Single(list!);
         Assert.Equal(50000m, list![0].Amount);
     }
+
+    [Fact]
+    public async Task CreateTransaction_WithoutDate_UseNow()
+    {
+        var (client, walletId, catId) = await SetupAsync();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/transactions",
+            new TransactionRequest(walletId, catId, 50000, TransactionType.Expense, null, null)
+        );
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<TransactionDto>();
+        Assert.True((DateTime.UtcNow - body!.Date).Duration() < TimeSpan.FromMinutes(5));
+    }
+
 }

@@ -36,7 +36,7 @@ public class TransactionService : ITransactionService
            .ToListAsync();
 
         return new PageResult<TransactionDto>(
-            items, page, pageSize, totalCount, (int)Math.Ceiling(totalCount/ (double)pageSize)
+            items, page, pageSize, totalCount, (int)Math.Ceiling(totalCount / (double)pageSize)
         );
     }
 
@@ -59,7 +59,7 @@ public class TransactionService : ITransactionService
             Amount = request.Amount,
             Type = request.Type,
             Note = request.Note,
-            Date = request.Date.ToUniversalTime(),
+            Date = request.Date?.ToUniversalTime() ?? DateTime.UtcNow,
         };
 
         _db.Transactions.Add(transaction);
@@ -87,7 +87,7 @@ public class TransactionService : ITransactionService
         transaction.Amount = request.Amount;
         transaction.Type = request.Type;
         transaction.Note = request.Note;
-        transaction.Date = request.Date.ToUniversalTime();
+        if (request.Date.HasValue) transaction.Date = request.Date.Value.ToUniversalTime();
 
         await _db.SaveChangesAsync();
 
