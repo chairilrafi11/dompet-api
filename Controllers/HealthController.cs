@@ -19,9 +19,9 @@ public class HealthController : ControllerBase
             await _db.Database.ExecuteSqlRawAsync("SELECT 1");
             return Ok(new { status = "ok" });
         }
-        catch (Exception ex)
+        catch
         {
-            return StatusCode(503, new { status = "db_unavailable", error = ex.GetType().Name + ": " + ex.Message });
+            return StatusCode(503, new { status = "db_unavailable" });
         }
     }
 }
