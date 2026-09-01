@@ -47,6 +47,19 @@ public class AnalyticsTests
     }
 
     [Fact]
+    public async Task Summary_IncludesPreviousPeriod()
+    {
+        var client = await ClientAsync();
+
+        var response = await client.GetAsync("/api/analytics/summary");
+        var summary = await response.Content.ReadFromJsonAsync<AnalyticsSummary>();
+
+        Assert.Equal(0m, summary!.PrevIncome);
+        Assert.Equal(0m, summary.PrevExpense);
+        Assert.Equal(0m, summary.PrevNet);
+    }
+
+    [Fact]
     public async Task ByCategory_ReturnsBreakdown()
     {
         var client = await ClientAsync();
@@ -57,19 +70,34 @@ public class AnalyticsTests
         var item = Assert.Single(breakdown!);
         Assert.Equal("Makan", item.Category);
         Assert.Equal(40000m, item.Amount);
+        Assert.True(item.CategoryId > 0);
     }
 
     [Fact]
-    public async Task MonthlyTrend_ReturnsCurrentMonth()
+    public async Task Trend_ReturnsCurrentMonth()
     {
         var client = await ClientAsync();
 
-        var response = await client.GetAsync("/api/analytics/monthly-trend?months=3");
-        var trend = await response.Content.ReadFromJsonAsync<List<MonthlyTrend>>();
+        var response = await client.GetAsync("/api/analytics/trend");
+        var trend = await response.Content.ReadFromJsonAsync<List<TrendPoint>>();
 
-        Assert.Equal(3, trend!.Count);
-        var current = trend[^1];
-        Assert.Equal(100000m, current.Income);
-        Assert.Equal(40000m, current.Expense);
+        Assert.NotNull(trend);
+        Assert.NotEmpty(trend);
+        Assert.Equal(100000m, trend.Sum(t => t.Income));
+        Assert.Equal(40000m, trend.Sum(t => t.Expense));    }
+
+    [Fact]
+    public async Task WalletRecap_ReturnsWalletSummary()
+    {
+        var client = await ClientAsync();
+
+        var response = await client.GetAsync("/api/analytics/wallet-recap");
+        var recap = await response.Content.ReadFromJsonAsync<List<WalletRecap>>();
+
+        var item = Assert.Single(recap!);
+        Assert.Equal("Cash", item.WalletName);
+        Assert.Equal(100000m, item.Income);
+        Assert.Equal(40000m, item.Expense);
+        Assert.Equal(60000m, item.Net);
     }
 }

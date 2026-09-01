@@ -1,7 +1,15 @@
 namespace Dompet.Api.DTOs;
 
-public record AnalyticsSummary(decimal Income, decimal Expense, decimal Net);
+public record AnalyticsSummary(
+    decimal Income,
+    decimal Expense,
+    decimal Net,
+    decimal PrevIncome,
+    decimal PrevExpense,
+    decimal PrevNet);
 
-public record CategoryBreakdown(string Category, decimal Amount);
+public record CategoryBreakdown(int CategoryId, string Category, decimal Amount, decimal PrevAmount);
 
-public record MonthlyTrend(string Month, decimal Income, decimal Expense);
+public record TrendPoint(string Date, decimal Income, decimal Expense);
+
+public record WalletRecap(int WalletId, string WalletName, decimal Income, decimal Expense, decimal Net);

@@ -18,14 +18,22 @@ public class AnalyticsController : ControllerBase
         User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new UnauthorizedAccessException();
 
     [HttpGet("summary")]
-    public async Task<ActionResult<AnalyticsSummary>> Summary([FromQuery] int? year, [FromQuery] int? month) =>
-        Ok(await _analytics.GetSummaryAsync(UserId, year, month));
+    public async Task<ActionResult<AnalyticsSummary>> Summary(
+        [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] int? year, [FromQuery] int? month) =>
+        Ok(await _analytics.GetSummaryAsync(UserId, from, to, year, month));
 
     [HttpGet("by-category")]
-    public async Task<ActionResult<List<CategoryBreakdown>>> ByCategory([FromQuery] int? year, [FromQuery] int? month) =>
-        Ok(await _analytics.GetByCategoryAsync(UserId, year, month));
+    public async Task<ActionResult<List<CategoryBreakdown>>> ByCategory(
+        [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] int? year, [FromQuery] int? month) =>
+        Ok(await _analytics.GetByCategoryAsync(UserId, from, to, year, month));
 
-    [HttpGet("monthly-trend")]
-    public async Task<ActionResult<List<MonthlyTrend>>> MonthlyTrend([FromQuery] int months = 6) =>
-        Ok(await _analytics.GetMonthlyTrendAsync(UserId, months));
+    [HttpGet("trend")]
+    public async Task<ActionResult<List<TrendPoint>>> Trend(
+        [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] int? year, [FromQuery] int? month) =>
+        Ok(await _analytics.GetTrendAsync(UserId, from, to, year, month));
+
+    [HttpGet("wallet-recap")]
+    public async Task<ActionResult<List<WalletRecap>>> WalletRecap(
+        [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] int? year, [FromQuery] int? month) =>
+        Ok(await _analytics.GetWalletRecapAsync(UserId, from, to, year, month));
 }
