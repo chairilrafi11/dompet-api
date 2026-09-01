@@ -16,10 +16,8 @@ public class HealthController : ControllerBase
     {
         try
         {
-            var dbOk = await _db.Database.CanConnectAsync();
-            return dbOk
-                ? Ok(new { status = "ok" })
-                : StatusCode(503, new { status = "db_unavailable" });
+            await _db.Database.ExecuteSqlRawAsync("SELECT 1");
+            return Ok(new { status = "ok" });
         }
         catch (Exception ex)
         {
