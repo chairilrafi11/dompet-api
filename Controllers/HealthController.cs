@@ -14,9 +14,16 @@ public class HealthController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var dbOk = await _db.Database.CanConnectAsync();
-        return dbOk
-            ? Ok(new { status = "ok" })
-            : StatusCode(503, new { status = "db_unavailable" });
+        try
+        {
+            var dbOk = await _db.Database.CanConnectAsync();
+            return dbOk
+                ? Ok(new { status = "ok" })
+                : StatusCode(503, new { status = "db_unavailable" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(503, new { status = "db_unavailable", error = ex.GetType().Name + ": " + ex.Message });
+        }
     }
 }
